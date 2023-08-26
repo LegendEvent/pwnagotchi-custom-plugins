@@ -1,4 +1,5 @@
 import logging
+from optparse import TitledHelpFormatter
 import os
 import pwnagotchi.plugins as plugins
 import datetime
@@ -11,7 +12,7 @@ import pwnagotchi.ui.fonts as fonts
 
 class Achievements(plugins.Plugin):
     __author__ = 'luca.paulmann1@gmail.com'
-    __version__ = '1.0.0'
+    __version__ = '1.0.1'
     __license__ = 'GPL3'
     __description__ = 'Collect achievements for daily challenges.'
     __defaults__ = {
@@ -29,7 +30,8 @@ class Achievements(plugins.Plugin):
         logging.info("Achievements plugin loaded")
 
     def on_ui_setup(self, ui):
-        ui.add_element('showAchievements', LabeledValue(color=BLACK, label="Lvl:", value="", position=(0, 83), label_font=fonts.Medium, text_font=fonts.Medium))
+        title = self.get_title_based_on_achievements()
+        ui.add_element('showAchievements', LabeledValue(color=BLACK, label="PWND:", value=f"{self.achievement_count}/{self.daily_target} ({title})", position=(0, 83), label_font=fonts.Medium, text_font=fonts.Medium))
 
     def on_ui_update(self, ui):
         if self.ready:
@@ -48,7 +50,7 @@ class Achievements(plugins.Plugin):
                 self.last_claimed = datetime.datetime.strptime(data['last_claimed'], '%Y-%m-%d').date() if 'last_claimed' in data else None
         else:
             self.save_to_json()
-        self.update_title()
+        self.get_title_based_on_achievements
 
     def update_title(self):
         titles = {
@@ -61,9 +63,11 @@ class Achievements(plugins.Plugin):
         for threshold, title in titles.items():
             if self.achievement_count >= threshold:
                 self.title = title
+                return title
 
     def get_title_based_on_achievements(self):
-        return self.title
+        title = self.update_title()
+        return title
 
     def save_to_json(self):
         data = {
